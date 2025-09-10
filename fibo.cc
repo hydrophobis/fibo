@@ -3,58 +3,41 @@
 #include <chrono>
 #include <cstring>
 
-// Define switches:
-// #define QUIET_MODE   // Uncomment to suppress all info except final number
-// #define PRINT_FULL   // Uncomment to force printing the entire Fibonacci number
-
 void fib(mpz_t result, unsigned long long n) {
-    if (n == 0) {
-        mpz_set_ui(result, 0);
-        return;
-    }
-    if (n == 1 || n == 2) {
-        mpz_set_ui(result, 1);
-        return;
-    }
-    
-    size_t estimated_bits = (size_t)(n * 0.694) + 100;
-    
-    mpz_t a, b, c, d, tmp1, tmp2;
-    mpz_inits(a, b, c, d, tmp1, tmp2, nullptr);
-    
-    mpz_realloc2(a, estimated_bits);
-    mpz_realloc2(b, estimated_bits);
-    mpz_realloc2(c, estimated_bits);
-    mpz_realloc2(d, estimated_bits);
-    mpz_realloc2(tmp1, estimated_bits);
-    mpz_realloc2(tmp2, estimated_bits);
+    mpz_t a, b;
+    mpz_inits(a, b, nullptr);
 
-    mpz_set_ui(a, 0);
-    mpz_set_ui(b, 1);
+    mpz_set_ui(a, 0); // F(0)
+    mpz_set_ui(b, 1); // F(1)
 
-    int start_bit = 63 - __builtin_clzll(n) - 1;
-    
-    for (int i = start_bit; i >= 0; --i) {
-        mpz_mul_2exp(tmp1, b, 1);
-        mpz_sub(tmp1, tmp1, a);
-        mpz_mul(c, a, tmp1);
+    for (int i = 63 - __builtin_clzll(n); i >= 0; --i) {
+        // temp1 = a * (2*b - a)   → F(2k)
+        mpz_t t1, t2;
+        mpz_inits(t1, t2, nullptr);
 
-        mpz_mul(tmp1, a, a);
-        mpz_mul(tmp2, b, b);
-        mpz_add(d, tmp1, tmp2);
+        mpz_mul_2exp(t1, b, 1);   // 2*b
+        mpz_sub(t1, t1, a);       // 2*b - a
+        mpz_mul(t1, a, t1);       // a * (2*b - a)
+
+        // t2 = a^2 + b^2          → F(2k+1)
+        mpz_mul(t2, a, a);        // a^2
+        mpz_addmul(t2, b, b);     // + b^2
 
         if ((n >> i) & 1) {
-            mpz_set(a, d);
-            mpz_add(b, c, d);
+            mpz_set(a, t2);       // a = F(2k+1)
+            mpz_add(b, t1, t2);   // b = F(2k) + F(2k+1) = F(2k+2)
         } else {
-            mpz_set(a, c);
-            mpz_set(b, d);
+            mpz_set(a, t1);       // a = F(2k)
+            mpz_set(b, t2);       // b = F(2k+1)
         }
+
+        mpz_clears(t1, t2, nullptr);
     }
 
     mpz_set(result, a);
-    mpz_clears(a, b, c, d, tmp1, tmp2, nullptr);
+    mpz_clears(a, b, nullptr);
 }
+
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
