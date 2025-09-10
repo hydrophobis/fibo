@@ -1,0 +1,53 @@
+#!/bin/bash
+SRC="fibo.cc"
+OUT="fibo"
+
+# Check for GMP headers
+if ! echo "#include <gmp.h>" | g++ -E - >/dev/null 2>&1; then
+    echo "Error: GMP development headers not found (gmp.h missing)."
+    echo "Please install GMP (e.g., on Ubuntu: sudo apt install libgmp-dev)"
+    exit 1
+fi
+
+# Check for GMP library
+if ! ldconfig -p | grep -q libgmp; then
+    echo "Error: GMP library not found (libgmp missing)."
+    echo "Please install GMP (e.g., on Ubuntu: sudo apt install libgmp-dev)"
+    exit 1
+fi
+
+echo "Building $SRC..."
+g++ -O3 -march=native -flto -funroll-loops "$SRC" -o "$OUT" -lgmp -lgmpxx
+if [ $? -ne 0 ]; then
+    echo "Compilation failed."
+    exit 1
+fi
+
+echo "Build succeeded: ./$OUT"
+
+# Offer install options
+echo "Where would you like to install $OUT?"
+echo "  1) Leave in current directory"
+echo "  2) Move to ~/bin (per-user bin)"
+echo "  3) Move to /usr/bin (system-wide, requires sudo)"
+read -p "Choose [1-3]: " choice
+
+case "$choice" in
+    2)
+        mkdir -p ~/bin
+        mv "$OUT" ~/bin/
+        echo "Moved to ~/bin/$OUT"
+        ;;
+    3)
+        if [ "$(id -u)" -ne 0 ]; then
+            echo "Elevated privileges required. Using sudo..."
+            sudo mv "$OUT" /usr/bin/
+        else
+            mv "$OUT" /usr/bin/
+        fi
+        echo "Moved to /usr/bin/$OUT"
+        ;;
+    *)
+        echo "Binary left in current directory."
+        ;;
+esac
