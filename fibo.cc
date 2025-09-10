@@ -92,13 +92,9 @@ int main(int argc, char* argv[]) {
 #ifdef PRINT_FULL
     std::cout <<
 #ifndef QUIET_MODE 
-    "F(" <<
+    "F(" << n << ") = " <<
 #endif
-    n 
-#ifndef QUIET_MODE
-    << ") = " 
-#endif
-    << str << std::endl;
+    str << std::endl;
 #else
     if (len <= 100) {
         std::cout << "F(" << n << ") = " << str << std::endl;
