@@ -16,8 +16,22 @@ if ! ldconfig -p | grep -q libgmp; then
     exit 1
 fi
 
-echo "Building $SRC..."
-g++ -O3 -march=native -flto -funroll-loops "$SRC" -o "$OUT" -lgmp -lgmpxx
+# Ask about compile-time defines
+DEFINES=""
+echo "Do you want to enable QUIET_MODE (suppress extra output)? [y/N]"
+read -r reply
+if [[ "$reply" =~ ^[Yy]$ ]]; then
+    DEFINES="$DEFINES -DQUIET_MODE"
+fi
+
+echo "Do you want to enable PRINT_FULL (print the entire Fibonacci number)? [y/N]"
+read -r reply
+if [[ "$reply" =~ ^[Yy]$ ]]; then
+    DEFINES="$DEFINES -DPRINT_FULL"
+fi
+
+echo "Building $SRC with options: $DEFINES"
+g++ -O3 -march=native -flto -funroll-loops $DEFINES "$SRC" -o "$OUT" -lgmp -lgmpxx
 if [ $? -ne 0 ]; then
     echo "Compilation failed."
     exit 1

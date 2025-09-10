@@ -88,8 +88,17 @@ int main(int argc, char* argv[]) {
     char* str = mpz_get_str(nullptr, 10, result);
     size_t len = strlen(str);
     
+// silly lookin ahh formatting code
 #ifdef PRINT_FULL
-    std::cout << "F(" << n << ") = " << str << std::endl;
+    std::cout <<
+#ifndef QUIET_MODE 
+    "F(" <<
+#endif
+    n 
+#ifndef QUIET_MODE
+    << ") = " 
+#endif
+    << str << std::endl;
 #else
     if (len <= 100) {
         std::cout << "F(" << n << ") = " << str << std::endl;
